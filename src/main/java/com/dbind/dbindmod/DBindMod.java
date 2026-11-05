@@ -12,9 +12,11 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
 
 public class DBindMod {
-
+    public static final String MODID = "dbindmod";
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
-        
+        if(!(DependencyDetector.dubAvailable())) {
+            // TODO
+        }
     }
 }
