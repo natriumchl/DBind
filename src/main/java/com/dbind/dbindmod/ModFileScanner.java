@@ -17,15 +17,33 @@ public class ModFileScanner {
     
     private static final Logger logs = LogUtils.getLogger();
     
-    private static final Path modsDir = FMLPaths.MODSDIR.get(); 
+    public static final Path modsDir = FMLPaths.MODSDIR.get(); 
     
-    private static final Path minecraftRoot = FMLPaths.GAMEDIR.get();
-    private static final Path dbindFolder = minecraftRoot.resolve("folder");
+    public static final Path minecraftRoot = FMLPaths.GAMEDIR.get();
+    public static final Path dbindFolder = minecraftRoot.resolve("dbind");
+    public static final Path binFolder = dbindFolder.resolve("bin");
+    public static final Path srcFolder = dbindFolder.resolve("src");
+    public static final Path binWinDir = binFolder.resolve("win");
+    public static final Path binLinDir = binFolder.resolve("linux");
+    public static final Path binMacDir = binFolder.resolve("mac");
+    public static final Path binBsdDir = binFolder.resolve("bsd");
     
     public static void runFolderProcess() {
         try {
-            if (Files.notExists(dbindFolder)) {
-                Files.createDirectories(dbindFolder);
+            if (Files.notExists(binWinDir)) {
+                Files.createDirectories(binWinDir);
+            }
+            if (Files.notExists(binLinDir)) {
+                Files.createDirectories(binLinDir);
+            }
+            if (Files.notExists(binMacDir)) {
+                Files.createDirectories(binMacDir);
+            }
+            if (Files.notExists(binBsdDir)) {
+                Files.createDirectories(binBsdDir);
+            }
+            if (Files.notExists(srcFolder)) {
+                Files.createDirectories(srcFolder);
             }
         } catch (IOException e) {
             logs.warn("dbind: dbind folder exception; caught");
@@ -47,19 +65,29 @@ public class ModFileScanner {
     private static Vector<String> returnFilteredModsFile(Vector<String> input) {
         Vector<String> result = new Vector<>(); 
         for(String element : input) {
-            if(element.endsWith("dbind-based.jar") || element.endsWith("dbb.jar")) { //check
+            if(element.endsWith(".d.jar") || element.endsWith(".dbind.jar")) { //check
                 result.add(element); 
             }
         }
         return result;
     }
     
-    public static void mfsMain() {
+    public static void unzipile(Vector<Path> modsToUnzip) {
+        for (Path path : modsToUnzip) {
+            Path destPath = srcFolder.resolve(path.getFileName().toString().replaceFirst("\\.(d|dbind)\\.jar$", ""));
+            boolean suc = FileUnzipper.unzip(path, destPath);
+            if(suc) CompilationProcess.compileAndMove(destPath);
+        }
+    }
+    
+    public static void Main() {
         runFolderProcess();
         Vector<String> modsToCompileStr = returnFilteredModsFile(shallowModSearch());
         Vector<Path> modsToCompile = new Vector<>(modsToCompileStr.size());
         for (String str : modsToCompileStr) {
             modsToCompile.add(Path.of(str));
         }
+        
+        unzipile(modsToCompile);
     }
 }

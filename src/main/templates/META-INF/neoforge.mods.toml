@@ -42,11 +42,11 @@ displayName="${mod_name}" #mandatory
 #credits="" #optional
 
 # The authors of the mod, displayed in the mod UI (optional)
-#authors=""
+#authors="natriumchl"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Example mod description.
+Binder for mods written in D.
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
