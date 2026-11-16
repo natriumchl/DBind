@@ -22,82 +22,86 @@
 //dependency: arsd-official:jni
 //run `dub add arsd-official:jni` in yuor dub project
 
-module dbindlib.src.dbindlib;
+module dbindlib;
 import arsd.jni;
+import std.conv : to;
 
-extern(System):
+enum Priority { highest, high, normal, low, lowest }
 
-private class JUtil {
-    class Convert {
-        class String {
-            static void d_to_j() {
-                //TODO
+private class JUtils {
+    static class ClassImports {
+        static class NeoForge {
+            //NeoForge imports
+            static final class Event : JavaClass!("net.neoforged.bus.api", Event) {}
+            static final class EventPriority : JavaClass!("net.neoforged.bus.api", EventPriority) {
+                @Import static EventPriority HIGHEST;
+                @Import static EventPriority HIGH;
+                @Import static EventPriority NORMAL;
+                @Import static EventPriority LOW;
+                @Import static EventPriority LOWEST;
             }
-            static void j_to_d() {
-                //TODO
+            static EventPriority javaPriorityTranslator(Priority priority) {
+                final switch (priority) {
+                    case Priority.highest:
+                        return JUtils.ClassImports.EventPriority.HIGHEST;
+
+                    case Priority.high:
+                        return JUtils.ClassImports.EventPriority.HIGH;
+
+                    case Priority.normal:
+                        return JUtils.ClassImports.EventPriority.NORMAL;
+
+                    case Priority.low:
+                        return JUtils.ClassImports.EventPriority.LOW;
+
+                    case Priority.lowest:
+                        return JUtils.ClassImports.EventPriority.LOWEST;
+                }
+            }
+            static final class IEventBus : JavaClass!("net.neoforged.bus.api", IEventBus) {
+                @Import bool post(Event event);
             }
         }
-    }
-    class ClassImports {
-        final class NativeLinker : JavaClass!("com.dbind.dbindmod", Logs) {
+        private alias IEventBus     = NeoForge.IEventBus;
+        private alias EventPriority = NeoForge.EventPriority;
+        static final class NativeLinker : JavaClass!("com.dbind.dbindmod", NativeLinker) {
             @Import
             static void dLog(wstring message);
-            @Import
-            static void dSubscribe(
-                IEventBus bus,
-                String eventClassName,
-            );
-            @Import
-            static void dSubscribe(
-                IEventBus bus,
-                String eventClassName,
-                EventPriority priority,
-                bool receiveCanceled
-            );
-        }
 
-        //neoforged classes
-        final class Event : JavaClass!(
-            "net.neoforged.bus.api",
-            Event
-        ) {
-        }
-        final class IEventBus : JavaClass!(
-            "net.neoforged.bus.api",
-            IEventBus
-        ) {
+            @Import
+            static IEventBus dEventBus();
+            
+            @Import
+            static void dSubscribe(IEventBus bus, wstring eventClassName); //and its overload
+            @Import
+            static void dSubscribe(IEventBus bus, wstring eventClassName, EventPriority priority, bool receiveCanceled);
         }
     }
 }
 
-
-public
-{
-    enum Dist {
-        CLIENT,
-        DEDICATED_SERVER,
-    }
-    
-    // allow for @Mod("modid")
-    struct Mod {
-        string value;
-        Dist[] dist = [Dist.CLIENT, Dist.DEDICATED_SERVER];
-    }
-
-    // allow for @EventBusSubscriber
-    struct EventBusSubscriber {
-        Dist[] dist = [Dist.CLIENT, Dist.DEDICATED_SERVER];
-        string modid = "";
-    }
+static wstring utf16(string input) {
+    return input.to!wstring;
+}
+static string utf8(wstring input) {
+    return input.to!string;
 }
 
 class DBind {
-public:
-    static void log(string message) {
-        JUtil.ClassImports.NativeLinker.dLog(message);
+    static void log(string input) {
+        JUtils.ClassImports.NativeLinker.dLog(input.utf16());
+    }
+
+    static void subscribe(string eventClassName) {
+        JUtils.ClassImports.NativeLinker.dSubscribe(
+            JUtils.ClassImports.NativeLinker.dEventBus(), eventClassName.utf16());
+    }
+
+    static void subscribe(string eventClassName, Priority p, bool receiveCanceled) {
+        JUtils.ClassImports.NativeLinker.dSubscribe(
+            JUtils.ClassImports.NativeLinker.dEventBus(), eventClassName.utf16(),
+            JUtils.ClassImports.NeoForge.javaPriorityTranslator(p), receiveCanceled);
     }
 }
-
-void main(string[] args) {
+int main(string[] args) {
 
 }

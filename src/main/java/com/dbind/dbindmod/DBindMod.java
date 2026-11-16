@@ -24,7 +24,6 @@ public class DBindMod {
     static void onClientSetup(FMLClientSetupEvent event) {
         
         if((!(DependencyDetector.dubAvailable()))) {
-            // TODO
             logs.warn("[DBIND]\nDUB (D package manager) is missing from your environment variables. " + 
                     "To verify if it installs, run \"dub --version\" in your terminal (without the quotes). " + 
                             "\nThis is essential for the mod to function."
