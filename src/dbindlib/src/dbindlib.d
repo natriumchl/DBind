@@ -77,11 +77,13 @@ public
         CLIENT,
         DEDICATED_SERVER,
     }
+    
     // allow for @Mod("modid")
     struct Mod {
         string value;
         Dist[] dist = [Dist.CLIENT, Dist.DEDICATED_SERVER];
     }
+
     // allow for @EventBusSubscriber
     struct EventBusSubscriber {
         Dist[] dist = [Dist.CLIENT, Dist.DEDICATED_SERVER];
