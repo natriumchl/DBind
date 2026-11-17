@@ -23,6 +23,10 @@ public class NativeLinker {
     public static void dLog(String message) {
         log.info("{}", message);
     }
+    
+    public static IEventBus dEventBus() {
+        return NeoForge.EVENT_BUS;
+    }
 
     
     //event exposing (AI-generated code is unreadable sometimes :cry:)

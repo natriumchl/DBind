@@ -25,37 +25,38 @@
 module dbindlib;
 import arsd.jni;
 import std.conv : to;
+import std.traits;
 
 enum Priority { highest, high, normal, low, lowest }
 
-private class JUtils {
+package class JUtils {
     static class ClassImports {
         static class NeoForge {
             //NeoForge imports
             static final class Event : JavaClass!("net.neoforged.bus.api", Event) {}
             static final class EventPriority : JavaClass!("net.neoforged.bus.api", EventPriority) {
-                @Import static EventPriority HIGHEST;
-                @Import static EventPriority HIGH;
-                @Import static EventPriority NORMAL;
-                @Import static EventPriority LOW;
-                @Import static EventPriority LOWEST;
+                @Import static @property EventPriority HIGHEST();
+                @Import static @property EventPriority HIGH();
+                @Import static @property EventPriority NORMAL();
+                @Import static @property EventPriority LOW();
+                @Import static @property EventPriority LOWEST();
             }
             static EventPriority javaPriorityTranslator(Priority priority) {
                 final switch (priority) {
                     case Priority.highest:
-                        return JUtils.ClassImports.EventPriority.HIGHEST;
+                        return EventPriority.HIGHEST;
 
                     case Priority.high:
-                        return JUtils.ClassImports.EventPriority.HIGH;
+                        return EventPriority.HIGH;
 
                     case Priority.normal:
-                        return JUtils.ClassImports.EventPriority.NORMAL;
+                        return EventPriority.NORMAL;
 
                     case Priority.low:
-                        return JUtils.ClassImports.EventPriority.LOW;
+                        return EventPriority.LOW;
 
                     case Priority.lowest:
-                        return JUtils.ClassImports.EventPriority.LOWEST;
+                        return EventPriority.LOWEST;
                 }
             }
             static final class IEventBus : JavaClass!("net.neoforged.bus.api", IEventBus) {
@@ -75,9 +76,19 @@ private class JUtils {
             static void dSubscribe(IEventBus bus, wstring eventClassName); //and its overload
             @Import
             static void dSubscribe(IEventBus bus, wstring eventClassName, EventPriority priority, bool receiveCanceled);
+
+            @Export static void onModInit(IEventBus modEventBus, IEventBus gameEventBus) {
+                .onModInit(modEventBus, gameEventBus);
+            }
+            @Export static void onAnyEvent(Event event) {
+                .onAnyEvent(event);
+            }
         }
     }
 }
+
+private alias IEventBus = JUtils.ClassImports.NeoForge.IEventBus;
+private alias Event = JUtils.ClassImports.NeoForge.Event;
 
 static wstring utf16(string input) {
     return input.to!wstring;
@@ -86,22 +97,67 @@ static string utf8(wstring input) {
     return input.to!string;
 }
 
+struct SubsribeEvent {
+    Priority priority = Priority.normal;
+    bool receiveCanceled = false;
+}
+
 class DBind {
+public:
     static void log(string input) {
         JUtils.ClassImports.NativeLinker.dLog(input.utf16());
     }
 
     static void subscribe(string eventClassName) {
         JUtils.ClassImports.NativeLinker.dSubscribe(
-            JUtils.ClassImports.NativeLinker.dEventBus(), eventClassName.utf16());
+            JUtils.ClassImports.NativeLinker.dEventBus(), eventClassName.utf16()
+        );
+        if (JNI.ExceptionCheck()) {
+            JNI.ExceptionDescribe();
+            JNI.ExceptionClear();
+            throw new Exception("dSubscribe failed for " ~ eventClassName);
+        }
     }
 
     static void subscribe(string eventClassName, Priority p, bool receiveCanceled) {
         JUtils.ClassImports.NativeLinker.dSubscribe(
             JUtils.ClassImports.NativeLinker.dEventBus(), eventClassName.utf16(),
-            JUtils.ClassImports.NeoForge.javaPriorityTranslator(p), receiveCanceled);
+            JUtils.ClassImports.NeoForge.javaPriorityTranslator(p), receiveCanceled
+        );
+        if (JNI.ExceptionCheck()) {
+            JNI.ExceptionDescribe();
+            JNI.ExceptionClear();
+            throw new Exception("dSubscribe failed for " ~ eventClassName);
+        }
     }
-}
-int main(string[] args) {
 
 }
+
+extern(C) void onModInit(IEventBus modEventBus, IEventBus gameEventBus);
+extern(C) void onAnyEvent(Event event);
+
+
+/*
+implementation:
+```
+import dbindlib;
+
+//required boilerplate code
+extern(C) void onModInit(IEventBus modEventBus, IEventBus gameEventBus) {
+    //leave empty or not
+}
+extern(C) void onAnyEvent(Event event) {
+    //leave empty or not (can be substituted)
+}
+
+@SubscribeEvent
+void onLivingJump(
+    LivingEvent.LivingJumpEvent event, 
+    Priority priority, 
+    bool receiveCanceled) 
+{
+    //maybe
+}
+```
+
+*/
