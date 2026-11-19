@@ -12,7 +12,7 @@ import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
-@Mod(value = DBindMod.MODID, dist = Dist.CLIENT)
+@Mod(value = DBindMod.MODID)
 // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
 @EventBusSubscriber(modid = DBindMod.MODID, value = Dist.CLIENT)
 

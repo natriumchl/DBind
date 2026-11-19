@@ -1,3 +1,5 @@
+//jni is hard
+
 package com.dbind.dbindmod;
 
 import com.mojang.logging.LogUtils;

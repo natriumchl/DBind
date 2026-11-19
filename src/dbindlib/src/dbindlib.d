@@ -20,7 +20,10 @@
  */
 
 //dependency: arsd-official:jni
-//run `dub add arsd-official:jni` in yuor dub project
+//run `dub add arsd-official:jni` in your dub project
+
+
+//jni is hard
 
 module dbindlib;
 import arsd.jni;
@@ -30,8 +33,8 @@ import std.traits;
 enum Priority { highest, high, normal, low, lowest }
 
 package class JUtils {
-    static class ClassImports {
-        static class NeoForge {
+    package static class ClassImports {
+        package static class NeoForge {
             //NeoForge imports
             static final class Event : JavaClass!("net.neoforged.bus.api", Event) {}
             static final class EventPriority : JavaClass!("net.neoforged.bus.api", EventPriority) {
@@ -63,6 +66,7 @@ package class JUtils {
                 @Import bool post(Event event);
             }
         }
+
         private alias IEventBus     = NeoForge.IEventBus;
         private alias EventPriority = NeoForge.EventPriority;
         static final class NativeLinker : JavaClass!("com.dbind.dbindmod", NativeLinker) {
@@ -87,8 +91,8 @@ package class JUtils {
     }
 }
 
-private alias IEventBus = JUtils.ClassImports.NeoForge.IEventBus;
-private alias Event = JUtils.ClassImports.NeoForge.Event;
+public alias IEventBus = JUtils.ClassImports.NeoForge.IEventBus;
+public alias Event = JUtils.ClassImports.NeoForge.Event;
 
 static wstring utf16(string input) {
     return input.to!wstring;
@@ -97,7 +101,7 @@ static string utf8(wstring input) {
     return input.to!string;
 }
 
-struct SubsribeEvent {
+struct SubscribeEvent {
     Priority priority = Priority.normal;
     bool receiveCanceled = false;
 }
@@ -112,11 +116,6 @@ public:
         JUtils.ClassImports.NativeLinker.dSubscribe(
             JUtils.ClassImports.NativeLinker.dEventBus(), eventClassName.utf16()
         );
-        if (JNI.ExceptionCheck()) {
-            JNI.ExceptionDescribe();
-            JNI.ExceptionClear();
-            throw new Exception("dSubscribe failed for " ~ eventClassName);
-        }
     }
 
     static void subscribe(string eventClassName, Priority p, bool receiveCanceled) {
@@ -124,11 +123,6 @@ public:
             JUtils.ClassImports.NativeLinker.dEventBus(), eventClassName.utf16(),
             JUtils.ClassImports.NeoForge.javaPriorityTranslator(p), receiveCanceled
         );
-        if (JNI.ExceptionCheck()) {
-            JNI.ExceptionDescribe();
-            JNI.ExceptionClear();
-            throw new Exception("dSubscribe failed for " ~ eventClassName);
-        }
     }
 
 }
@@ -139,6 +133,26 @@ extern(C) void onAnyEvent(Event event);
 
 /*
 implementation:
+planned V1
+```
+import dbindlib;
+import std.conv : to;
+
+extern(C) void onModInit(IEventBus modEventBus, IEventBus gameEventBus) {
+    DBind.subscribe("net.neoforged.neoforge.event.tick.ServerTickEvent$Post");
+}
+
+extern(C) void onAnyEvent(Event event) {
+    string eventName = event.getClass().getName().to!string;
+
+    if (eventName == "net.neoforged.neoforge.event.tick.ServerTickEvent$Post") {
+        //implementation
+    }
+}
+
+```
+
+planned V2 (won't implement until release)
 ```
 import dbindlib;
 
@@ -159,5 +173,6 @@ void onLivingJump(
     //maybe
 }
 ```
+or something like that
 
 */

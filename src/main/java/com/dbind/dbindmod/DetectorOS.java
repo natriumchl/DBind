@@ -9,6 +9,7 @@ public class DetectorOS {
     public static final boolean IS_LINUX   = OS.contains("linux") || OS.contains("nux");
     public static final boolean IS_BSD     = OS.contains("bsd");
     
+    //justin case
     public static final boolean IS_X64     = ARCH.contains("amd64") || ARCH.contains("x86_64");
     public static final boolean IS_ARM64   = ARCH.contains("aarch64") || ARCH.contains("arm64");
     
