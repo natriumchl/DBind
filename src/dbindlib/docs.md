@@ -59,6 +59,7 @@ Automatic-Module-Name: anything.you.want
 ## Putting it all together
 run:
 ```
-jar cMf TestMod.jar -C /path/to/your/mod/  .
+jar cMf yourMod.d.jar -C /path/to/your/mod/  .
 ```
 and put your generated jar file inside the mods folder to verify if it works, or publish it somewhere
+(DBind mods end with .d.jar)
