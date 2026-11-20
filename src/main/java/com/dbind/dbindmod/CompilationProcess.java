@@ -40,6 +40,7 @@ public class CompilationProcess {
         String fileExtension;
         Path targetFolder;
         if(DetectorOS.IS_WINDOWS) {
+            modName = modName.replaceFirst("^lib", "");
             fileExtension = ".dll"; 
             targetFolder = winBinary;
         } else if(DetectorOS.IS_LINUX) {

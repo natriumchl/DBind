@@ -17,7 +17,7 @@ public class FileUnzipper {
             logs.info("Extracted {} to {}", sourceDest, endDest);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            logs.error("dbind: failed to extract {} to {}", sourceDest, endDest, e);
             return false;
         }
     }

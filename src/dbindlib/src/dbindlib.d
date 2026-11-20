@@ -39,7 +39,6 @@ package class JUtils {
     package static class ClassImports {
         package static class NeoForge {
             //NeoForge imports
-            static final class Event : JavaClass!("net.neoforged.bus.api", Event) {}
             static final class EventPriority : JavaClass!("net.neoforged.bus.api", EventPriority) {
                 @Import static @property EventPriority HIGHEST();
                 @Import static @property EventPriority HIGH();
@@ -67,6 +66,18 @@ package class JUtils {
             }
             static final class IEventBus : JavaClass!("net.neoforged.bus.api", IEventBus) {
                 @Import bool post(Event event);
+            }
+            @JavaName("Class")
+            static final class JavaClassObj : JavaClass!("java.lang", JavaClassObj) {
+                @Import wstring getName();
+            }
+
+            static final class Event : JavaClass!("net.neoforged.bus.api", Event) {
+                @Import JavaClassObj getClass();
+
+                @property string name() {
+                    return this.getClass().getName().to!string;
+                }
             }
         }
 
@@ -175,9 +186,7 @@ extern(C) void onModInit(IEventBus modEventBus, IEventBus gameEventBus) {
 }
 
 extern(C) void onAnyEvent(Event event) {
-    string eventName = event.getClass().getName().to!string;
-
-    if (eventName == "net.neoforged.neoforge.event.tick.ServerTickEvent$Post") {
+    if (event.name == "net.neoforged.neoforge.event.tick.ServerTickEvent$Post") {
         //implementation
     }
 }
