@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 
 @Mod(value = DBindMod.MODID)
 // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-@EventBusSubscriber(modid = DBindMod.MODID,)
+@EventBusSubscriber(modid = DBindMod.MODID)
 
 
 public class DBindMod {

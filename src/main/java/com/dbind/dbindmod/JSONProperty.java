@@ -18,7 +18,7 @@ public class JSONProperty {
             if (jsonObject.has(getString)) {
                 return jsonObject.get(getString).getAsString();
             }
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             e.printStackTrace();
         }
         return "Property Not Found";

@@ -18,10 +18,13 @@ public class CompilationProcess {
     
     public static boolean compile(Path pathToCompile) {
         try {
-            Process compile = new ProcessBuilder("dub", "build").directory(pathToCompile.toFile()).start();
+            Process compile = new ProcessBuilder("dub", "build").directory(pathToCompile.toFile()).inheritIO().start();
             int exitCode = compile.waitFor();
             return exitCode == 0;
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             return false;
         }
     }
