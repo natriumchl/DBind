@@ -1,3 +1,2 @@
 Minecraft library mod for using DLang for Minecraft mods.
-2 compiler options:
-`dmd`, `ldc2`
+**This project is not endorsed by the official creators behind DLang.**

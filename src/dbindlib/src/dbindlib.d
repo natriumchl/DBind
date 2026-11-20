@@ -25,10 +25,13 @@
 
 //jni is hard
 
+//dbindlib 0.1.0 for dbind pre1
+
 module dbindlib;
 import arsd.jni;
 import std.conv : to;
 import std.traits;
+import std.format;
 
 enum Priority { highest, high, normal, low, lowest }
 
@@ -72,6 +75,9 @@ package class JUtils {
         static final class NativeLinker : JavaClass!("com.dbind.dbindmod", NativeLinker) {
             @Import
             static void dLog(wstring message);
+            
+            @Import
+            static void dLog(wstring message, int severity);
 
             @Import
             static IEventBus dEventBus();
@@ -106,10 +112,36 @@ struct SubscribeEvent {
     bool receiveCanceled = false;
 }
 
+enum LogSeverity : int {
+    ERROR = 1,
+    WARN  = 2,
+    INFO  = 3,
+    DEBUG = 4,
+    TRACE = 5
+}
+
+alias Error = LogSeverity.ERROR;
+alias Info = LogSeverity.INFO;
+alias Warn = LogSeverity.WARN;
+alias Debug = LogSeverity.DEBUG;
+alias Trace = LogSeverity.TRACE;
+
 class DBind {
 public:
+
+    //log("Hello World");
     static void log(string input) {
         JUtils.ClassImports.NativeLinker.dLog(input.utf16());
+    }
+
+    //log("Hello World", Info);
+    static void log(string input, LogSeverity severity) {
+        JUtils.ClassImports.NativeLinker.dLog(input.utf16(), cast(int) severity);
+    }
+
+    //log!Info("Hello World");
+    static void log(LogSeverity severity)(string input) {
+        log(input, severity);
     }
 
     static void subscribe(string eventClassName) {
@@ -152,7 +184,7 @@ extern(C) void onAnyEvent(Event event) {
 
 ```
 
-planned V2 (won't implement until release)
+planned in the future (won't implement until release)
 ```
 import dbindlib;
 

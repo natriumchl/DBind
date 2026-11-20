@@ -7,6 +7,8 @@ import java.nio.file.StandardCopyOption;
 import net.neoforged.fml.ModLoadingIssue;
 import net.neoforged.fml.ModLoadingException;
 
+import net.neoforged.bus.api.IEventBus;
+
 public class CompilationProcess {
     private static final Path modFolder = ModFileScanner.dbindFolder;
     private static final Path winBinary = ModFileScanner.binWinDir;
@@ -24,7 +26,14 @@ public class CompilationProcess {
         }
     }
     
-    public static void move(Path pathToMove) {
+    public record MoveReturnType(Path path, String modName) {
+        public MoveReturnType(Path path) {
+            this(path, "DefaultMod");
+        }
+    }
+
+    
+    public static MoveReturnType move(Path pathToMove, String modName) {
         String fileExtension;
         Path targetFolder;
         if(DetectorOS.IS_WINDOWS) {
@@ -45,19 +54,23 @@ public class CompilationProcess {
             );
         }
         
-        Path sourcePath = pathToMove.resolve(JSONProperty.get(pathToMove.resolve("dbind.json"), "name") + fileExtension);
+        Path targetFile = targetFolder.resolve(modName + fileExtension);
+        Path sourcePath = pathToMove.resolve(modName + fileExtension);
         try {
-            Files.move(sourcePath, targetFolder, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(sourcePath, targetFile, StandardCopyOption.REPLACE_EXISTING);
+            return new MoveReturnType(targetFile, modName);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
     
-    public static boolean compileAndMove(Path inputPath) {
-        boolean IsCompileOK = compile(inputPath);
-        if(IsCompileOK) {move(inputPath);} else {
+    public static boolean compileMoveAndLink(Path inputPath, IEventBus modEventBus, String modName) {
+        boolean isCompileOK = compile(inputPath);
+        if (!isCompileOK) {
             return false;
         }
+        MoveReturnType moveResult = move(inputPath, modName);
+        NativeLinker.link(moveResult.path(), modEventBus, moveResult.modName());
         return true;
     }
 }

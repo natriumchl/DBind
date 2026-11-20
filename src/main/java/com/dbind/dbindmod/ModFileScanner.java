@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.io.IOException;
 import java.util.Vector;
 
+import net.neoforged.bus.api.IEventBus;
+
 
 public class ModFileScanner {
     
@@ -72,15 +74,33 @@ public class ModFileScanner {
         return result;
     }
     
-    public static void unzipile(Vector<Path> modsToUnzip) {
+    public static void unzipile(Vector<Path> modsToUnzip, IEventBus modEventBus) {
+        Vector<String> usedNames = new Vector<>();
         for (Path path : modsToUnzip) {
-            Path destPath = srcFolder.resolve(path.getFileName().toString().replaceFirst("\\.(d|dbind)\\.jar$", ""));
+            String sourceFolderName = path.getFileName().toString().replace('.', '_');
+            Path destPath = srcFolder.resolve(sourceFolderName);
             boolean suc = FileUnzipper.unzip(path, destPath);
-            if(suc) CompilationProcess.compileAndMove(destPath);
+            if(suc) {
+                String modName = sanitizeName(JSONProperty.get(destPath.resolve("dbind.json"), "name"));
+                if(modName == null || usedNames.contains(modName)) {
+                    logs.warn("dbind: skipping {} (missing or duplicate mod name: {})", path, modName);
+                    continue;
+                }
+                usedNames.add(modName);
+                CompilationProcess.compileMoveAndLink(destPath, modEventBus, modName);
+            }
+
         }
     }
+
+    private static String sanitizeName(String name) {
+        if(name == null || name.equals("Property Not Found") || name.isBlank()) {
+            return null;
+        }
+        return name.replaceAll("[^a-zA-Z0-9_]", "_");
+    }
     
-    public static void Main() {
+    public static void Main(IEventBus modEventBus) {
         runFolderProcess();
         Vector<String> modsToCompileStr = returnFilteredModsFile(shallowModSearch());
         Vector<Path> modsToCompile = new Vector<>(modsToCompileStr.size());
@@ -88,6 +108,6 @@ public class ModFileScanner {
             modsToCompile.add(Path.of(str));
         }
         
-        unzipile(modsToCompile);
+        unzipile(modsToCompile, modEventBus);
     }
 }
